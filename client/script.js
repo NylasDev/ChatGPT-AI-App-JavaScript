@@ -7,15 +7,17 @@ const chatContainer = document.querySelector('#chat_container');
 let loadInterval;
 
 function loader(element) {
-  element.textContent = '';
-  
-  loadInterval = setInterval(()=>{
-    element.textContent += '.';
+  element.textContent = ''
 
-    if(element.textContent === '....') {
-      element.textContent = '';
-    }
-  }, 300)
+  loadInterval = setInterval(() => {
+      // Update the text content of the loading indicator
+      element.textContent += '.';
+
+      // If the loading indicator has reached three dots, reset it
+      if (element.textContent === '....') {
+          element.textContent = '';
+      }
+  }, 300);
 }
 
 function typeText(element, text) {
@@ -23,7 +25,7 @@ function typeText(element, text) {
 
   let interval = setInterval(()=> {
     if(index <text.length) {
-      element.innerHTML += text.chartAt(index);
+      element.innerHTML += text.charAt(index);
       index++;
     } else {
       clearInterval(interval);
@@ -42,19 +44,18 @@ function generateUniqueId() {
 function chatStripe (isAi, value, uniqueId) {
   return (
     `
-    '<div class="wrapper ${isAi && 'ai'}">
-      <div class="chat">
-        <div class="profile">
-          <img 
-            src="${isAi ? bot : user}" 
-            alt="${isAi ? 'bot' : 'user'}"
-          />
+    <div class="wrapper ${isAi && 'ai'}">
+        <div class="chat">
+            <div class="profile">
+                <img 
+                  src=${isAi ? bot : user} 
+                  alt="${isAi ? 'bot' : 'user'}" 
+                />
+            </div>
+            <div class="message" id=${uniqueId}>${value}</div>
         </div>
-        <div class="message" id=${uniqueId}>${value}</div>
-      </div> 
-     </div>
-    '
-    `
+    </div>
+`
   )
 }
 
@@ -76,6 +77,34 @@ const handleSubmit = async (e) => {
   const messageDiv = document.getElementById(uniqueId);
 
   loader(messageDiv);
+
+  //fetch data from server -> bot response
+  const response = await fetch('http://localhost:5000', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        prompt: data.get('prompt')
+    })
+  })
+
+  clearInterval(loadInterval);
+  messageDiv.innerHTML = '';
+
+  if(response.ok) {
+    const data = await response.json();
+    const parsedData = data.bot.trim();
+
+    console.log({parsedData});
+    console.log({messageDiv});
+    typeText(messageDiv, parsedData);
+  } else {
+    const err = await response.text();
+
+    messageDiv.innerHTML = "Something is wrong, the machine spirit is silent!";
+    alert(err);
+  }
 }
 
 form.addEventListener('submit', handleSubmit);
