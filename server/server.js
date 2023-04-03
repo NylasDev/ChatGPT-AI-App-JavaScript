@@ -48,4 +48,4 @@ app.post('/', async(req,res)=> {
     }
 })
 
-app.listen(5000, ()=> console.log('The machine spirit is listenining http://localhost:5000'));
+app.listen(5000, ()=> console.log('The machine spirit is listenining...'));
